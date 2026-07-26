@@ -8,6 +8,37 @@ A tool that connects [Google Ads](https://ads.google.com/) with Claude AI, allow
 
 ---
 
+## ⚠️ Fork notes (zach841/mcp-google-ads)
+
+This is a fork of [`cohnen/mcp-google-ads`](https://github.com/cohnen/mcp-google-ads). **Clone
+this fork, not upstream.** Upstream still pins Google Ads API **v19, which is retired** — every
+request 404s, so the server starts normally and then every single call fails. Upstream's last
+commit was 2025-10-16 and seven open PRs proposing this same version bump have gone unmerged
+since February, so the fix is not coming.
+
+**What this fork changes:** one thing. The API version is read from an environment variable
+instead of being hardcoded.
+
+```bash
+GOOGLE_ADS_API_VERSION=v26   # optional; works as a real env var or in .env
+```
+
+Default is **v25**. Measured against a live account on 2026-07-26:
+
+| v19 | v20 | v21 | v22 | v23 | v24 | v25 |
+|-----|-----|-----|-----|-----|-----|-----|
+| 404 | 400 | 200 | 200 | 200 | 200 | 200 |
+
+v21 was chosen against because it was the *oldest surviving* version — first in line to be
+retired next. A GAQL `searchStream` was checked on v21/v23/v25 before moving, not just the
+`listAccessibleCustomers` auth ping, and returned identical results.
+
+**If calls suddenly start returning 404, the pinned version was retired.** Set
+`GOOGLE_ADS_API_VERSION` to a newer one — no code edit and no redeploy — then update the
+default in `google_ads_server.py`.
+
+---
+
 ## What Can This Tool Do For Advertising Professionals?
 
 1. **Account Management**  
