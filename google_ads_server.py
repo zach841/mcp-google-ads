@@ -32,7 +32,9 @@ mcp = FastMCP(
 
 # Constants and configuration
 SCOPES = ['https://www.googleapis.com/auth/adwords']
-API_VERSION = "v21"  # Google Ads API version
+# NOTE: API_VERSION is read below, WITH the other env-backed config -- deliberately not here.
+# Anything read above load_dotenv() ignores the .env file, which would make
+# GOOGLE_ADS_API_VERSION work as a real env var but silently do nothing in .env.
 
 # Load environment variables
 try:
@@ -42,6 +44,20 @@ try:
     logger.info("Environment variables loaded from .env file")
 except ImportError:
     logger.warning("python-dotenv not installed, skipping .env file loading")
+
+# Google Ads API version. Override without editing code (env var OR .env):
+#     GOOGLE_ADS_API_VERSION=v26
+#
+# Google retires API versions on a rolling schedule, and a retired version does not degrade
+# gracefully -- every request 404s, so the server still starts and every call simply fails.
+# Measured 2026-07-26: v19 -> 404, v20 -> 400, v21..v25 -> 200. The default was moved
+# v21 -> v25 because v21 was the OLDEST surviving version, i.e. next in line to be retired.
+# Verified first on the real query path (GAQL searchStream, not just listAccessibleCustomers):
+# identical results on v21/v23/v25.
+#
+# If Google Ads calls start 404ing, this version was retired: set the env var to bump it with
+# no code change or redeploy, then update this default.
+API_VERSION = os.environ.get("GOOGLE_ADS_API_VERSION", "v25")
 
 # Get credentials from environment variables
 GOOGLE_ADS_CREDENTIALS_PATH = os.environ.get("GOOGLE_ADS_CREDENTIALS_PATH")
